@@ -35,23 +35,23 @@ func NewOpen(mx sync.Locker, limit int) (self *Open_t) {
 
 func (self *Open_t) PushFront(value interface{}) int {
 	self.writers++
-	for self.buf.Size() > self.limit || (self.buf.Size() == self.limit && self.readers == 0) {
+	for self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
 		self.reader.Wait()
 	}
+	self.writers--
 	self.buf.PushFront(value)
 	self.writer.Signal()
-	self.writers--
 	return self.closed
 }
 
 func (self *Open_t) PushBack(value interface{}) int {
 	self.writers++
-	for self.buf.Size() > self.limit || (self.buf.Size() == self.limit && self.readers == 0) {
+	for self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
 		self.reader.Wait()
 	}
+	self.writers--
 	self.buf.PushBack(value)
 	self.writer.Signal()
-	self.writers--
 	return self.closed
 }
 
