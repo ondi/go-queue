@@ -44,10 +44,10 @@ type Queue_t struct {
 	q  Queue
 }
 
-func New(limit int) (self *Queue_t) {
-	self = &Queue_t{}
+func New(limit int) Queue {
+	self := &Queue_t{}
 	self.q = NewOpen(&self.mx, limit)
-	return
+	return self
 }
 
 func (self *Queue_t) PushFront(value interface{}) (ok int) {

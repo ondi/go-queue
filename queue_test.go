@@ -1,101 +1,79 @@
 package queue
 
 import (
-	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"gotest.tools/assert"
 )
 
-func Example_queue1() {
+func TestQueue1(t *testing.T) {
 	var i interface{}
 	var ok int
 
 	q := New(2)
 	ok = q.PushBack("lalala")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 0)
 	ok = q.PushFront("bububu")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 0)
 	ok = q.PushBackNoWait("kukuku")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 1)
 	ok = q.PushFrontNoWait("jujuju")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 1)
 
 	i, _ = q.PopBack()
-	fmt.Printf("%v\n", i)
+	assert.Assert(t, i == "lalala")
 	i, _ = q.PopBack()
-	fmt.Printf("%v\n", i)
-	// Output:
-	// 0
-	// 0
-	// 1
-	// 1
-	// lalala
-	// bububu
+	assert.Assert(t, i == "bububu")
 }
 
-func Example_queue2() {
+func TestQueue2(t *testing.T) {
 	var i interface{}
 	var ok int
 
 	q := New(4)
 	ok = q.PushBack("lalala")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 0)
 	ok = q.PushFront("bububu")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 0)
 	q.Close()
 	ok = q.PushBack("kukuku")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == -1)
 	ok = q.PushFront("jujuju")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == -1)
 
 	i, _ = q.PopBack()
-	fmt.Printf("%v\n", i)
+	assert.Assert(t, i == "lalala")
 	i, _ = q.PopBack()
-	fmt.Printf("%v\n", i)
-	// Output:
-	// 0
-	// 0
-	// -1
-	// -1
-	// lalala
-	// bububu
+	assert.Assert(t, i == "bububu")
 }
 
-func Example_queue3() {
+func TestQueue3(t *testing.T) {
 	var i interface{}
 	var ok int
 
 	q := New(2)
 	ok = q.PushBack("lalala")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 0)
 	ok = q.PushFront("bububu")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 0)
 
 	ok = q.PushBackNoWait("lalala")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 1)
 	ok = q.PushFrontNoWait("bububu")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == 1)
 
 	q.Close()
 	ok = q.PushBack("kukuku")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == -1)
 	ok = q.PushFront("jujuju")
-	fmt.Printf("%v\n", ok)
+	assert.Assert(t, ok == -1)
 
 	i, _ = q.PopBack()
-	fmt.Printf("%v\n", i)
+	assert.Assert(t, i == "lalala")
 	i, _ = q.PopBack()
-	fmt.Printf("%v\n", i)
-	// Output:
-	// 0
-	// 0
-	// 1
-	// 1
-	// -1
-	// -1
-	// lalala
-	// bububu
+	assert.Assert(t, i == "bububu")
 }
 
 func Push(q Queue, current *int32, my int32) {
@@ -109,7 +87,7 @@ func Push(q Queue, current *int32, my int32) {
 	}
 }
 
-func Example_queue4() {
+func TestQueue4(t *testing.T) {
 	q := New(0)
 	var count int32
 	go Push(q, &count, 4)
@@ -123,57 +101,50 @@ func Example_queue4() {
 	}
 
 	temp, ok := q.PopFrontNoWait()
-	fmt.Printf("%v %v\n", ok, temp)
+	assert.Assert(t, ok == 0)
+	assert.Assert(t, temp.(int32) == 0)
 
 	temp, ok = q.PopFrontNoWait()
-	fmt.Printf("%v %v\n", ok, temp)
+	assert.Assert(t, ok == 0)
+	assert.Assert(t, temp.(int32) == 1)
 
 	temp, ok = q.PopFrontNoWait()
-	fmt.Printf("%v %v\n", ok, temp)
+	assert.Assert(t, ok == 0)
+	assert.Assert(t, temp.(int32) == 2)
 
 	temp, ok = q.PopFrontNoWait()
-	fmt.Printf("%v %v\n", ok, temp)
+	assert.Assert(t, ok == 0)
+	assert.Assert(t, temp.(int32) == 3)
 
 	temp, ok = q.PopFrontNoWait()
-	fmt.Printf("%v %v\n", ok, temp)
-	// Output:
-	// 0 0
-	// 0 1
-	// 0 2
-	// 0 3
-	// 0 4
+	assert.Assert(t, ok == 0)
+	assert.Assert(t, temp.(int32) == 4)
 }
 
-func Test_queue3(t *testing.T) {
+func TestQueue5(t *testing.T) {
 	q := New(0)
 
 	go func() {
 		ok := q.PushBack("lalala")
-		if ok != 0 {
-			t.Fatalf("PushBack: %v", ok)
-		}
+		assert.Assert(t, ok == 0)
 	}()
 
 	i, ok := q.PopBack()
-	if ok != 0 || i.(string) != "lalala" {
-		t.Fatalf("PopBack: %v %v", i, ok)
-	}
+	assert.Assert(t, ok == 0)
+	assert.Assert(t, i == "lalala")
 }
 
-func Test_queue4(t *testing.T) {
+func TestQueue6(t *testing.T) {
 	q := New(0)
 
 	go func() {
 		ok := q.PushFront("lalala")
-		if ok != 0 {
-			t.Fatalf("PushBack: %v", ok)
-		}
+		assert.Assert(t, ok == 0)
 	}()
 
 	i, ok := q.PopFront()
-	if ok != 0 || i.(string) != "lalala" {
-		t.Fatalf("PopBack: %v %v", i, ok)
-	}
+	assert.Assert(t, ok == 0)
+	assert.Assert(t, i == "lalala")
 }
 
 func Benchmark_queue1(b *testing.B) {

@@ -8,9 +8,8 @@ type Closed_t struct {
 	buf List
 }
 
-func NewClosed(buf List) (self *Closed_t) {
-	self = &Closed_t{buf: buf}
-	return
+func NewClosed(buf List) Queue {
+	return &Closed_t{buf: buf}
 }
 
 func (self *Closed_t) PushFront(interface{}) int {

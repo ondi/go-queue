@@ -23,14 +23,15 @@ type Open_t struct {
 	closed  int
 }
 
-func NewOpen(mx sync.Locker, limit int) (self *Open_t) {
-	self = &Open_t{}
-	self.buf = list.New(limit + 1)
-	self.reader = sync.NewCond(mx)
-	self.writer = sync.NewCond(mx)
-	self.mx = mx
-	self.limit = limit
-	return
+func NewOpen(mx sync.Locker, limit int) Queue {
+	self := &Open_t{
+		buf:    list.New(limit + 1),
+		reader: sync.NewCond(mx),
+		writer: sync.NewCond(mx),
+		mx:     mx,
+		limit:  limit,
+	}
+	return self
 }
 
 func (self *Open_t) PushFront(value interface{}) int {
