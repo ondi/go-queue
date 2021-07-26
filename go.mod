@@ -3,7 +3,7 @@ module github.com/ondi/go-queue
 go 1.17
 
 require (
-	github.com/ondi/go-circular v0.0.0-20190901195436-409c96cac419
+	github.com/ondi/go-circular v0.0.0-20210726154101-9fad127ee38f
 	gotest.tools v2.2.0+incompatible
 )
 
