@@ -9,10 +9,10 @@ import (
 )
 
 func TestQueue1(t *testing.T) {
-	var i interface{}
+	var i string
 	var ok int
 
-	q := New(2)
+	q := New[string](2)
 	ok = q.PushBack("lalala")
 	assert.Assert(t, ok == 0)
 	ok = q.PushFront("bububu")
@@ -29,10 +29,10 @@ func TestQueue1(t *testing.T) {
 }
 
 func TestQueue2(t *testing.T) {
-	var i interface{}
+	var i string
 	var ok int
 
-	q := New(4)
+	q := New[string](4)
 	ok = q.PushBack("lalala")
 	assert.Assert(t, ok == 0)
 	ok = q.PushFront("bububu")
@@ -50,10 +50,10 @@ func TestQueue2(t *testing.T) {
 }
 
 func TestQueue3(t *testing.T) {
-	var i interface{}
+	var i string
 	var ok int
 
-	q := New(2)
+	q := New[string](2)
 	ok = q.PushBack("lalala")
 	assert.Assert(t, ok == 0)
 	ok = q.PushFront("bububu")
@@ -76,7 +76,7 @@ func TestQueue3(t *testing.T) {
 	assert.Assert(t, i == "bububu")
 }
 
-func Push(q Queue, current *int32, my int32) {
+func Push(q Queue[int32], current *int32, my int32) {
 	for {
 		if atomic.LoadInt32(current) == my {
 			atomic.AddInt32(current, 1)
@@ -88,7 +88,7 @@ func Push(q Queue, current *int32, my int32) {
 }
 
 func TestQueue4(t *testing.T) {
-	q := New(0)
+	q := New[int32](0)
 	var count int32
 	go Push(q, &count, 4)
 	go Push(q, &count, 3)
@@ -102,27 +102,27 @@ func TestQueue4(t *testing.T) {
 
 	temp, ok := q.PopFrontNoWait()
 	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp.(int32) == 0)
+	assert.Assert(t, temp == 0)
 
 	temp, ok = q.PopFrontNoWait()
 	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp.(int32) == 1)
+	assert.Assert(t, temp == 1)
 
 	temp, ok = q.PopFrontNoWait()
 	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp.(int32) == 2)
+	assert.Assert(t, temp == 2)
 
 	temp, ok = q.PopFrontNoWait()
 	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp.(int32) == 3)
+	assert.Assert(t, temp == 3)
 
 	temp, ok = q.PopFrontNoWait()
 	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp.(int32) == 4)
+	assert.Assert(t, temp == 4)
 }
 
 func TestQueue5(t *testing.T) {
-	q := New(0)
+	q := New[string](0)
 
 	go func() {
 		ok := q.PushBack("lalala")
@@ -135,7 +135,7 @@ func TestQueue5(t *testing.T) {
 }
 
 func TestQueue6(t *testing.T) {
-	q := New(0)
+	q := New[string](0)
 
 	go func() {
 		ok := q.PushFront("lalala")
@@ -150,7 +150,7 @@ func TestQueue6(t *testing.T) {
 func Benchmark_queue1(b *testing.B) {
 	b.ReportAllocs()
 
-	q := New(b.N)
+	q := New[string](b.N)
 	for i := 0; i < b.N; i++ {
 		q.PushBack("lalala")
 	}
@@ -159,7 +159,7 @@ func Benchmark_queue1(b *testing.B) {
 func Benchmark_queue2(b *testing.B) {
 	b.ReportAllocs()
 
-	q := New(b.N)
+	q := New[string](b.N)
 
 	b.RunParallel(func(pb *testing.PB) {
 		var ok int
@@ -183,7 +183,7 @@ func Benchmark_queue2(b *testing.B) {
 func Benchmark_queue3(b *testing.B) {
 	b.ReportAllocs()
 
-	q := New(b.N)
+	q := New[string](b.N)
 
 	b.RunParallel(func(pb *testing.PB) {
 		var ok int

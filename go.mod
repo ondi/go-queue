@@ -1,9 +1,9 @@
 module github.com/ondi/go-queue
 
-go 1.17
+go 1.18
 
 require (
-	github.com/ondi/go-circular v0.0.0-20210820211818-b5fe0a3a1f71
+	github.com/ondi/go-circular v0.0.0-20220704164630-c29e6fae4bc2
 	gotest.tools v2.2.0+incompatible
 )
 

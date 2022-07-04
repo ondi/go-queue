@@ -12,8 +12,8 @@ import (
 	list "github.com/ondi/go-circular"
 )
 
-type Open_t struct {
-	buf     *list.List_t
+type Open_t[Value_t any] struct {
+	buf     *list.List_t[Value_t]
 	reader  *sync.Cond
 	writer  *sync.Cond
 	mx      sync.Locker
@@ -23,9 +23,9 @@ type Open_t struct {
 	closed  int
 }
 
-func NewOpen(mx sync.Locker, limit int) Queue {
-	self := &Open_t{
-		buf:    list.New(limit + 1),
+func NewOpen[Value_t any](mx sync.Locker, limit int) Queue[Value_t] {
+	self := &Open_t[Value_t]{
+		buf:    list.New[Value_t](limit + 1),
 		reader: sync.NewCond(mx),
 		writer: sync.NewCond(mx),
 		mx:     mx,
@@ -34,7 +34,7 @@ func NewOpen(mx sync.Locker, limit int) Queue {
 	return self
 }
 
-func (self *Open_t) PushFront(value interface{}) int {
+func (self *Open_t[Value_t]) PushFront(value Value_t) int {
 	self.writers++
 	for self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
 		self.reader.Wait()
@@ -45,7 +45,7 @@ func (self *Open_t) PushFront(value interface{}) int {
 	return self.closed
 }
 
-func (self *Open_t) PushBack(value interface{}) int {
+func (self *Open_t[Value_t]) PushBack(value Value_t) int {
 	self.writers++
 	for self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
 		self.reader.Wait()
@@ -56,7 +56,7 @@ func (self *Open_t) PushBack(value interface{}) int {
 	return self.closed
 }
 
-func (self *Open_t) PushFrontNoWait(value interface{}) int {
+func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
 	if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
 		return 1
 	}
@@ -65,7 +65,7 @@ func (self *Open_t) PushFrontNoWait(value interface{}) int {
 	return 0
 }
 
-func (self *Open_t) PushBackNoWait(value interface{}) int {
+func (self *Open_t[Value_t]) PushBackNoWait(value Value_t) int {
 	if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
 		return 1
 	}
@@ -74,7 +74,7 @@ func (self *Open_t) PushBackNoWait(value interface{}) int {
 	return 0
 }
 
-func (self *Open_t) PopFront() (interface{}, int) {
+func (self *Open_t[Value_t]) PopFront() (Value_t, int) {
 	self.readers++
 	self.reader.Signal()
 	for self.buf.Size() == 0 {
@@ -85,7 +85,7 @@ func (self *Open_t) PopFront() (interface{}, int) {
 	return value, self.closed
 }
 
-func (self *Open_t) PopBack() (interface{}, int) {
+func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
 	self.readers++
 	self.reader.Signal()
 	for self.buf.Size() == 0 {
@@ -96,7 +96,7 @@ func (self *Open_t) PopBack() (interface{}, int) {
 	return value, self.closed
 }
 
-func (self *Open_t) PopFrontNoWait() (interface{}, int) {
+func (self *Open_t[Value_t]) PopFrontNoWait() (v Value_t, res int) {
 	self.readers++
 	self.reader.Signal()
 	for self.buf.Size() == 0 && self.writers > 0 {
@@ -109,10 +109,11 @@ func (self *Open_t) PopFrontNoWait() (interface{}, int) {
 	if value, ok := self.buf.PopFront(); ok {
 		return value, 0
 	}
-	return nil, 1
+	res = 1
+	return
 }
 
-func (self *Open_t) PopBackNoWait() (interface{}, int) {
+func (self *Open_t[Value_t]) PopBackNoWait() (v Value_t, res int) {
 	self.readers++
 	self.reader.Signal()
 	for self.buf.Size() == 0 && self.writers > 0 {
@@ -125,38 +126,40 @@ func (self *Open_t) PopBackNoWait() (interface{}, int) {
 	if value, ok := self.buf.PopBack(); ok {
 		return value, 0
 	}
-	return nil, 1
+	res = 1
+	return
 }
 
-func (self *Open_t) Size() int {
+func (self *Open_t[Value_t]) Size() int {
 	return self.buf.Size()
 }
 
-func (self *Open_t) Readers() int {
+func (self *Open_t[Value_t]) Readers() int {
 	return self.readers
 }
 
-func (self *Open_t) Writers() int {
+func (self *Open_t[Value_t]) Writers() int {
 	return self.writers
 }
 
-func (self *Open_t) RangeFront(f func(interface{}) bool) {
+func (self *Open_t[Value_t]) RangeFront(f func(Value_t) bool) {
 	self.buf.RangeFront(f)
 }
 
-func (self *Open_t) RangeBack(f func(interface{}) bool) {
+func (self *Open_t[Value_t]) RangeBack(f func(Value_t) bool) {
 	self.buf.RangeBack(f)
 }
 
-func (self *Open_t) Close() (buf List) {
+func (self *Open_t[Value_t]) Close() (buf List[Value_t]) {
 	self.closed = -1
 	// readers may read data after close
 	buf = self.buf
 	// create buffer for pending readers and writers
-	self.buf = list.New(self.readers + self.writers + 1)
+	self.buf = list.New[Value_t](self.readers + self.writers + 1)
 	// release pending readers (waiting for buf.Size() > 0)
+	var temp Value_t
 	for i := 0; i < self.readers; i++ {
-		self.buf.PushBack(nil)
+		self.buf.PushBack(temp)
 	}
 	self.writer.Broadcast()
 	// release pending writers (waiting for buf.Size() <= limit)
