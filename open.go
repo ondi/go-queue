@@ -5,7 +5,6 @@
 package queue
 
 import (
-	"runtime"
 	"sync"
 
 	// list "github.com/ondi/go-list"
@@ -99,11 +98,8 @@ func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
 func (self *Open_t[Value_t]) PopFrontNoWait() (v Value_t, res int) {
 	self.readers++
 	self.reader.Signal()
-	for self.buf.Size() == 0 && self.writers > 0 {
-		// self.writer.Wait()
-		self.mx.Unlock()
-		runtime.Gosched()
-		self.mx.Lock()
+	for self.buf.Size() == 0 && self.writers >= self.readers {
+		self.writer.Wait()
 	}
 	self.readers--
 	if value, ok := self.buf.PopFront(); ok {
@@ -116,11 +112,8 @@ func (self *Open_t[Value_t]) PopFrontNoWait() (v Value_t, res int) {
 func (self *Open_t[Value_t]) PopBackNoWait() (v Value_t, res int) {
 	self.readers++
 	self.reader.Signal()
-	for self.buf.Size() == 0 && self.writers > 0 {
-		// self.writer.Wait()
-		self.mx.Unlock()
-		runtime.Gosched()
-		self.mx.Lock()
+	for self.buf.Size() == 0 && self.writers >= self.readers {
+		self.writer.Wait()
 	}
 	self.readers--
 	if value, ok := self.buf.PopBack(); ok {
