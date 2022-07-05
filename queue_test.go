@@ -14,18 +14,18 @@ func TestQueue1(t *testing.T) {
 
 	q := New[string](2)
 	ok = q.PushBack("lalala")
-	assert.Assert(t, ok == 0)
+	assert.Assert(t, ok == 0, ok)
 	ok = q.PushFront("bububu")
-	assert.Assert(t, ok == 0)
+	assert.Assert(t, ok == 0, ok)
 	ok = q.PushBackNoWait("kukuku")
-	assert.Assert(t, ok == 1)
+	assert.Assert(t, ok == 1, ok)
 	ok = q.PushFrontNoWait("jujuju")
-	assert.Assert(t, ok == 1)
+	assert.Assert(t, ok == 1, ok)
 
 	i, _ = q.PopBack()
-	assert.Assert(t, i == "lalala")
+	assert.Assert(t, i == "lalala", i)
 	i, _ = q.PopBack()
-	assert.Assert(t, i == "bububu")
+	assert.Assert(t, i == "bububu", i)
 }
 
 func TestQueue2(t *testing.T) {
@@ -34,19 +34,19 @@ func TestQueue2(t *testing.T) {
 
 	q := New[string](4)
 	ok = q.PushBack("lalala")
-	assert.Assert(t, ok == 0)
+	assert.Assert(t, ok == 0, ok)
 	ok = q.PushFront("bububu")
-	assert.Assert(t, ok == 0)
+	assert.Assert(t, ok == 0, ok)
 	q.Close()
 	ok = q.PushBack("kukuku")
-	assert.Assert(t, ok == -1)
+	assert.Assert(t, ok == -1, ok)
 	ok = q.PushFront("jujuju")
-	assert.Assert(t, ok == -1)
+	assert.Assert(t, ok == -1, ok)
 
 	i, _ = q.PopBack()
-	assert.Assert(t, i == "lalala")
+	assert.Assert(t, i == "lalala", i)
 	i, _ = q.PopBack()
-	assert.Assert(t, i == "bububu")
+	assert.Assert(t, i == "bububu", i)
 }
 
 func TestQueue3(t *testing.T) {
@@ -55,25 +55,25 @@ func TestQueue3(t *testing.T) {
 
 	q := New[string](2)
 	ok = q.PushBack("lalala")
-	assert.Assert(t, ok == 0)
+	assert.Assert(t, ok == 0, ok)
 	ok = q.PushFront("bububu")
-	assert.Assert(t, ok == 0)
+	assert.Assert(t, ok == 0, ok)
 
 	ok = q.PushBackNoWait("lalala")
-	assert.Assert(t, ok == 1)
+	assert.Assert(t, ok == 1, ok)
 	ok = q.PushFrontNoWait("bububu")
-	assert.Assert(t, ok == 1)
+	assert.Assert(t, ok == 1, ok)
 
 	q.Close()
 	ok = q.PushBack("kukuku")
-	assert.Assert(t, ok == -1)
+	assert.Assert(t, ok == -1, ok)
 	ok = q.PushFront("jujuju")
-	assert.Assert(t, ok == -1)
+	assert.Assert(t, ok == -1, ok)
 
 	i, _ = q.PopBack()
-	assert.Assert(t, i == "lalala")
+	assert.Assert(t, i == "lalala", i)
 	i, _ = q.PopBack()
-	assert.Assert(t, i == "bububu")
+	assert.Assert(t, i == "bububu", i)
 }
 
 func Push(q Queue[int32], current *int32, my int32) {
@@ -101,24 +101,24 @@ func TestQueue4(t *testing.T) {
 	}
 
 	temp, ok := q.PopFrontNoWait()
-	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp == 0)
+	assert.Assert(t, ok == 0, ok)
+	assert.Assert(t, temp == 0, temp)
 
 	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp == 1)
+	assert.Assert(t, ok == 0, ok)
+	assert.Assert(t, temp == 1, temp)
 
 	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp == 2)
+	assert.Assert(t, ok == 0, ok)
+	assert.Assert(t, temp == 2, temp)
 
 	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp == 3)
+	assert.Assert(t, ok == 0, ok)
+	assert.Assert(t, temp == 3, temp)
 
 	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0)
-	assert.Assert(t, temp == 4)
+	assert.Assert(t, ok == 0, ok)
+	assert.Assert(t, temp == 4, temp)
 }
 
 func TestQueue5(t *testing.T) {
@@ -126,12 +126,12 @@ func TestQueue5(t *testing.T) {
 
 	go func() {
 		ok := q.PushBack("lalala")
-		assert.Assert(t, ok == 0)
+		assert.Assert(t, ok == 0, ok)
 	}()
 
 	i, ok := q.PopBack()
-	assert.Assert(t, ok == 0)
-	assert.Assert(t, i == "lalala")
+	assert.Assert(t, ok == 0, ok)
+	assert.Assert(t, i == "lalala", i)
 }
 
 func TestQueue6(t *testing.T) {
@@ -139,12 +139,12 @@ func TestQueue6(t *testing.T) {
 
 	go func() {
 		ok := q.PushFront("lalala")
-		assert.Assert(t, ok == 0)
+		assert.Assert(t, ok == 0, ok)
 	}()
 
 	i, ok := q.PopFront()
-	assert.Assert(t, ok == 0)
-	assert.Assert(t, i == "lalala")
+	assert.Assert(t, ok == 0, ok)
+	assert.Assert(t, i == "lalala", i)
 }
 
 func Benchmark_queue1(b *testing.B) {

@@ -19,7 +19,7 @@ type Open_t[Value_t any] struct {
 	readers int
 	writers int
 	limit   int
-	closed  int
+	state   int
 }
 
 func NewOpen[Value_t any](mx sync.Locker, limit int) Queue[Value_t] {
@@ -29,98 +29,113 @@ func NewOpen[Value_t any](mx sync.Locker, limit int) Queue[Value_t] {
 		writer: sync.NewCond(mx),
 		mx:     mx,
 		limit:  limit,
+		state:  1,
 	}
 	return self
 }
 
 func (self *Open_t[Value_t]) PushFront(value Value_t) int {
 	self.writers++
-	for self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
+	for self.state == 1 && (self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0) {
 		self.reader.Wait()
 	}
 	self.writers--
-	self.buf.PushFront(value)
-	self.writer.Signal()
-	return self.closed
+	if self.state == 1 && self.buf.PushFront(value) {
+		self.writer.Signal()
+		return 0
+	}
+	return self.state
 }
 
 func (self *Open_t[Value_t]) PushBack(value Value_t) int {
 	self.writers++
-	for self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
+	for self.state == 1 && (self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0) {
 		self.reader.Wait()
 	}
 	self.writers--
-	self.buf.PushBack(value)
-	self.writer.Signal()
-	return self.closed
+	if self.state == 1 && self.buf.PushBack(value) {
+		self.writer.Signal()
+		return 0
+	}
+	return self.state
 }
 
 func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
-	if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
+	if self.state == 1 && (self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0) {
 		return 1
 	}
-	self.buf.PushFront(value)
-	self.writer.Signal()
-	return 0
+	if self.buf.PushFront(value) {
+		self.writer.Signal()
+		return 0
+	}
+	return self.state
 }
 
 func (self *Open_t[Value_t]) PushBackNoWait(value Value_t) int {
-	if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
+	if self.state == 1 && (self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0) {
 		return 1
 	}
-	self.buf.PushBack(value)
-	self.writer.Signal()
-	return 0
+	if self.buf.PushBack(value) {
+		self.writer.Signal()
+		return 0
+	}
+	return self.state
 }
 
 func (self *Open_t[Value_t]) PopFront() (Value_t, int) {
 	self.readers++
 	self.reader.Signal()
-	for self.buf.Size() == 0 {
+	for self.state == 1 && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
 	self.readers--
-	value, _ := self.buf.PopFront()
-	return value, self.closed
+	value, ok := self.buf.PopFront()
+	if ok {
+		return value, 0
+	}
+	return value, self.state
 }
 
 func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
 	self.readers++
 	self.reader.Signal()
-	for self.buf.Size() == 0 {
+	for self.state == 1 && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
 	self.readers--
-	value, _ := self.buf.PopBack()
-	return value, self.closed
-}
-
-func (self *Open_t[Value_t]) PopFrontNoWait() (v Value_t, res int) {
-	self.readers++
-	self.reader.Signal()
-	for self.buf.Size() == 0 && self.writers >= self.readers {
-		self.writer.Wait()
-	}
-	self.readers--
-	if value, ok := self.buf.PopFront(); ok {
+	value, ok := self.buf.PopBack()
+	if ok {
 		return value, 0
 	}
-	res = 1
-	return
+	return value, self.state
 }
 
-func (self *Open_t[Value_t]) PopBackNoWait() (v Value_t, res int) {
+func (self *Open_t[Value_t]) PopFrontNoWait() (Value_t, int) {
 	self.readers++
 	self.reader.Signal()
-	for self.buf.Size() == 0 && self.writers >= self.readers {
+	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
 		self.writer.Wait()
 	}
 	self.readers--
-	if value, ok := self.buf.PopBack(); ok {
+	value, ok := self.buf.PopFront()
+	if ok {
 		return value, 0
 	}
-	res = 1
-	return
+	return value, self.state
+}
+
+func (self *Open_t[Value_t]) PopBackNoWait() (Value_t, int) {
+	self.readers++
+	self.reader.Signal()
+	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
+		self.writer.Wait()
+	}
+	self.readers--
+	value, ok := self.buf.PopBack()
+	if ok {
+		return value, 0
+	}
+	return value, self.state
 }
 
 func (self *Open_t[Value_t]) Size() int {
@@ -143,20 +158,8 @@ func (self *Open_t[Value_t]) RangeBack(f func(Value_t) bool) {
 	self.buf.RangeBack(f)
 }
 
-func (self *Open_t[Value_t]) Close() (buf List[Value_t]) {
-	self.closed = -1
-	// readers may read data after close
-	buf = self.buf
-	// create buffer for pending readers and writers
-	self.buf = list.New[Value_t](self.readers + self.writers + 1)
-	// release pending readers (waiting for buf.Size() > 0)
-	var temp Value_t
-	for i := 0; i < self.readers; i++ {
-		self.buf.PushBack(temp)
-	}
+func (self *Open_t[Value_t]) Close() {
+	self.state = -1
 	self.writer.Broadcast()
-	// release pending writers (waiting for buf.Size() <= limit)
-	self.limit = self.buf.Size() - 1
 	self.reader.Broadcast()
-	return
 }

@@ -36,7 +36,7 @@ type Queue[Value_t any] interface {
 	Writers() int
 	Size() int
 
-	Close() List[Value_t]
+	Close()
 }
 
 type Queue_t[Value_t any] struct {
@@ -139,9 +139,8 @@ func (self *Queue_t[Value_t]) RangeBack(f func(Value_t) bool) {
 	self.mx.Unlock()
 }
 
-func (self *Queue_t[Value_t]) Close() List[Value_t] {
+func (self *Queue_t[Value_t]) Close() {
 	self.mx.Lock()
-	self.q = NewClosed(self.q.Close())
+	self.q.Close()
 	self.mx.Unlock()
-	return nil
 }
