@@ -61,23 +61,27 @@ func (self *Open_t[Value_t]) PushBack(value Value_t) int {
 }
 
 func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
-	if self.state == 1 && (self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0) {
-		return 1
-	}
-	if self.buf.PushFront(value) {
-		self.writer.Signal()
-		return 0
+	if self.state == 1 {
+		if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
+			return 1
+		}
+		if self.buf.PushFront(value) {
+			self.writer.Signal()
+			return 0
+		}
 	}
 	return self.state
 }
 
 func (self *Open_t[Value_t]) PushBackNoWait(value Value_t) int {
-	if self.state == 1 && (self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0) {
-		return 1
-	}
-	if self.buf.PushBack(value) {
-		self.writer.Signal()
-		return 0
+	if self.state == 1 {
+		if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
+			return 1
+		}
+		if self.buf.PushBack(value) {
+			self.writer.Signal()
+			return 0
+		}
 	}
 	return self.state
 }
