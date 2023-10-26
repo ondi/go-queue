@@ -15,7 +15,6 @@ type Open_t[Value_t any] struct {
 	buf     *list.List_t[Value_t]
 	reader  *sync.Cond
 	writer  *sync.Cond
-	mx      sync.Locker
 	readers int
 	writers int
 	limit   int
@@ -24,12 +23,15 @@ type Open_t[Value_t any] struct {
 
 func NewOpen[Value_t any](mx sync.Locker, limit int) Queue[Value_t] {
 	self := &Open_t[Value_t]{
-		buf:    list.New[Value_t](limit + 1),
 		reader: sync.NewCond(mx),
 		writer: sync.NewCond(mx),
-		mx:     mx,
 		limit:  limit,
 		state:  1,
+	}
+	if limit == 0 {
+		self.buf = list.New[Value_t](1)
+	} else {
+		self.buf = list.New[Value_t](limit)
 	}
 	return self
 }
@@ -40,8 +42,7 @@ func (self *Open_t[Value_t]) PushFront(value Value_t) int {
 		self.reader.Wait()
 	}
 	self.writers--
-	if self.state == 1 {
-		self.buf.PushFront(value)
+	if self.state == 1 && self.buf.PushFront(value) {
 		self.writer.Broadcast()
 		return 0
 	}
@@ -54,8 +55,7 @@ func (self *Open_t[Value_t]) PushBack(value Value_t) int {
 		self.reader.Wait()
 	}
 	self.writers--
-	if self.state == 1 {
-		self.buf.PushBack(value)
+	if self.state == 1 && self.buf.PushBack(value) {
 		self.writer.Broadcast()
 		return 0
 	}
@@ -93,11 +93,12 @@ func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
 }
 
 func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
-	if self.state == 1 {
-		if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
-			return 1
-		}
-		self.buf.PushFront(value)
+	self.writers++
+	for self.state == 1 && self.buf.Size() != 0 && self.readers >= self.writers {
+		self.reader.Wait()
+	}
+	self.writers--
+	if self.state == 1 && self.buf.PushFront(value) {
 		self.writer.Broadcast()
 		return 0
 	}
@@ -105,11 +106,12 @@ func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
 }
 
 func (self *Open_t[Value_t]) PushBackNoWait(value Value_t) int {
-	if self.state == 1 {
-		if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
-			return 1
-		}
-		self.buf.PushBack(value)
+	self.writers++
+	for self.state == 1 && self.buf.Size() != 0 && self.readers >= self.writers {
+		self.reader.Wait()
+	}
+	self.writers--
+	if self.state == 1 && self.buf.PushBack(value) {
 		self.writer.Broadcast()
 		return 0
 	}
