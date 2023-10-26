@@ -220,6 +220,35 @@ func TestReadersWaitWriters3(t *testing.T) {
 	assert.Assert(t, ok == 0, ok)
 }
 
+func TestReadersWaitWriters4(t *testing.T) {
+	q := New[int32](0)
+
+	go PopFront(q, t)
+	go PopFront(q, t)
+	go PopFront(q, t)
+	go PopFront(q, t)
+	go PopFront(q, t)
+
+	for q.Readers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	ok := q.PushBackNoWait(1)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBackNoWait(2)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBackNoWait(3)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBackNoWait(4)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBackNoWait(5)
+	assert.Assert(t, ok == 0, ok)
+}
+
 func TestQueue1(t *testing.T) {
 	q := New[string](2)
 
