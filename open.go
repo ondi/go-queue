@@ -62,6 +62,36 @@ func (self *Open_t[Value_t]) PushBack(value Value_t) int {
 	return self.state
 }
 
+func (self *Open_t[Value_t]) PopFront() (Value_t, int) {
+	self.readers++
+	self.reader.Signal()
+	for self.state == 1 && self.buf.Size() == 0 {
+		self.writer.Wait()
+	}
+	self.readers--
+	value, ok := self.buf.PopFront()
+	if ok {
+		self.reader.Signal()
+		return value, 0
+	}
+	return value, self.state
+}
+
+func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
+	self.readers++
+	self.reader.Signal()
+	for self.state == 1 && self.buf.Size() == 0 {
+		self.writer.Wait()
+	}
+	self.readers--
+	value, ok := self.buf.PopBack()
+	if ok {
+		self.reader.Signal()
+		return value, 0
+	}
+	return value, self.state
+}
+
 func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
 	if self.state == 1 {
 		if self.buf.Size() > self.limit || self.buf.Size() == self.limit && self.readers == 0 {
@@ -86,43 +116,16 @@ func (self *Open_t[Value_t]) PushBackNoWait(value Value_t) int {
 	return self.state
 }
 
-func (self *Open_t[Value_t]) PopFront() (Value_t, int) {
-	self.readers++
-	self.reader.Signal()
-	for self.state == 1 && self.buf.Size() == 0 {
-		self.writer.Wait()
-	}
-	self.readers--
-	value, ok := self.buf.PopFront()
-	if ok {
-		return value, 0
-	}
-	return value, self.state
-}
-
-func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
-	self.readers++
-	self.reader.Signal()
-	for self.state == 1 && self.buf.Size() == 0 {
-		self.writer.Wait()
-	}
-	self.readers--
-	value, ok := self.buf.PopBack()
-	if ok {
-		return value, 0
-	}
-	return value, self.state
-}
-
 func (self *Open_t[Value_t]) PopFrontNoWait() (Value_t, int) {
 	self.readers++
 	self.reader.Signal()
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
-		self.writer.Wait() // needs writer.Broadcast()
+		self.writer.Wait() // Broadcast required
 	}
 	self.readers--
 	value, ok := self.buf.PopFront()
 	if ok {
+		self.reader.Signal()
 		return value, 0
 	}
 	return value, self.state
@@ -132,11 +135,12 @@ func (self *Open_t[Value_t]) PopBackNoWait() (Value_t, int) {
 	self.readers++
 	self.reader.Signal()
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
-		self.writer.Wait() // needs writer.Broadcast()
+		self.writer.Wait() // Broadcast required
 	}
 	self.readers--
 	value, ok := self.buf.PopBack()
 	if ok {
+		self.reader.Signal()
 		return value, 0
 	}
 	return value, self.state

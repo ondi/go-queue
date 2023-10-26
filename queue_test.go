@@ -1,19 +1,229 @@
 package queue
 
 import (
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"gotest.tools/assert"
 )
 
-func TestQueue1(t *testing.T) {
-	var i string
-	var ok int
+func TestWritersWaitReaders1(t *testing.T) {
+	q := New[int32](0)
 
+	go q.PushBack(4)
+	go q.PushBack(3)
+	go q.PushBack(2)
+	go q.PushBack(1)
+	go q.PushBack(0)
+
+	for q.Writers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	_, ok := q.PopFront()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFront()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFront()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFront()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFront()
+	assert.Assert(t, ok == 0, ok)
+}
+
+func TestWritersWaitReaders2(t *testing.T) {
+	q := New[int32](0)
+
+	go q.PushFront(4)
+	go q.PushFront(3)
+	go q.PushFront(2)
+	go q.PushFront(1)
+	go q.PushFront(0)
+
+	for q.Writers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	_, ok := q.PopBack()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBack()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBack()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBack()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBack()
+	assert.Assert(t, ok == 0, ok)
+}
+
+func TestWritersWaitReaders3(t *testing.T) {
+	q := New[int32](0)
+
+	go q.PushBack(4)
+	go q.PushBack(3)
+	go q.PushBack(2)
+	go q.PushBack(1)
+	go q.PushBack(0)
+
+	for q.Writers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	_, ok := q.PopFrontNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFrontNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFrontNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFrontNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopFrontNoWait()
+	assert.Assert(t, ok == 0, ok)
+}
+
+func TestWritersWaitReaders4(t *testing.T) {
+	q := New[int32](0)
+
+	go q.PushFront(4)
+	go q.PushFront(3)
+	go q.PushFront(2)
+	go q.PushFront(1)
+	go q.PushFront(0)
+
+	for q.Writers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	_, ok := q.PopBackNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBackNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBackNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBackNoWait()
+	assert.Assert(t, ok == 0, ok)
+
+	_, ok = q.PopBackNoWait()
+	assert.Assert(t, ok == 0, ok)
+}
+
+func PopBack(q Queue[int32], t *testing.T) {
+	_, ok := q.PopBack()
+	assert.Assert(t, ok == 0, ok)
+}
+
+func PopFront(q Queue[int32], t *testing.T) {
+	_, ok := q.PopFront()
+	assert.Assert(t, ok == 0, ok)
+}
+
+func TestReadersWaitWriters1(t *testing.T) {
+	q := New[int32](0)
+
+	go PopBack(q, t)
+	go PopBack(q, t)
+	go PopBack(q, t)
+	go PopBack(q, t)
+	go PopBack(q, t)
+
+	for q.Readers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	ok := q.PushFront(1)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFront(2)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFront(3)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFront(4)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFront(5)
+	assert.Assert(t, ok == 0, ok)
+}
+
+func TestReadersWaitWriters2(t *testing.T) {
+	q := New[int32](0)
+
+	go PopFront(q, t)
+	go PopFront(q, t)
+	go PopFront(q, t)
+	go PopFront(q, t)
+	go PopFront(q, t)
+
+	for q.Readers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	ok := q.PushBack(1)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBack(2)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBack(3)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBack(4)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushBack(5)
+	assert.Assert(t, ok == 0, ok)
+}
+
+func TestReadersWaitWriters3(t *testing.T) {
+	q := New[int32](0)
+
+	go PopBack(q, t)
+	go PopBack(q, t)
+	go PopBack(q, t)
+	go PopBack(q, t)
+	go PopBack(q, t)
+
+	for q.Readers() != 5 {
+		time.Sleep(time.Millisecond)
+	}
+
+	ok := q.PushFrontNoWait(1)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFrontNoWait(2)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFrontNoWait(3)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFrontNoWait(4)
+	assert.Assert(t, ok == 0, ok)
+
+	ok = q.PushFrontNoWait(5)
+	assert.Assert(t, ok == 0, ok)
+}
+
+func TestQueue1(t *testing.T) {
 	q := New[string](2)
-	ok = q.PushBack("lalala")
+
+	ok := q.PushBack("lalala")
 	assert.Assert(t, ok == 0, ok)
 	ok = q.PushFront("bububu")
 	assert.Assert(t, ok == 0, ok)
@@ -22,18 +232,16 @@ func TestQueue1(t *testing.T) {
 	ok = q.PushFrontNoWait("jujuju")
 	assert.Assert(t, ok == 1, ok)
 
-	i, _ = q.PopBack()
+	i, _ := q.PopBack()
 	assert.Assert(t, i == "lalala", i)
 	i, _ = q.PopBack()
 	assert.Assert(t, i == "bububu", i)
 }
 
 func TestQueue2(t *testing.T) {
-	var i string
-	var ok int
-
 	q := New[string](4)
-	ok = q.PushBack("lalala")
+
+	ok := q.PushBack("lalala")
 	assert.Assert(t, ok == 0, ok)
 	ok = q.PushFront("bububu")
 	assert.Assert(t, ok == 0, ok)
@@ -43,18 +251,16 @@ func TestQueue2(t *testing.T) {
 	ok = q.PushFront("jujuju")
 	assert.Assert(t, ok == -1, ok)
 
-	i, _ = q.PopBack()
+	i, _ := q.PopBack()
 	assert.Assert(t, i == "lalala", i)
 	i, _ = q.PopBack()
 	assert.Assert(t, i == "bububu", i)
 }
 
 func TestQueue3(t *testing.T) {
-	var i string
-	var ok int
-
 	q := New[string](2)
-	ok = q.PushBack("lalala")
+
+	ok := q.PushBack("lalala")
 	assert.Assert(t, ok == 0, ok)
 	ok = q.PushFront("bububu")
 	assert.Assert(t, ok == 0, ok)
@@ -70,81 +276,10 @@ func TestQueue3(t *testing.T) {
 	ok = q.PushFront("jujuju")
 	assert.Assert(t, ok == -1, ok)
 
-	i, _ = q.PopBack()
+	i, _ := q.PopBack()
 	assert.Assert(t, i == "lalala", i)
 	i, _ = q.PopBack()
 	assert.Assert(t, i == "bububu", i)
-}
-
-func Push(q Queue[int32], current *int32, my int32) {
-	for {
-		if atomic.LoadInt32(current) == my {
-			atomic.AddInt32(current, 1)
-			q.PushBack(my)
-			return
-		}
-		time.Sleep(time.Millisecond)
-	}
-}
-
-func TestQueue4(t *testing.T) {
-	q := New[int32](0)
-	var count int32
-	go Push(q, &count, 4)
-	go Push(q, &count, 3)
-	go Push(q, &count, 2)
-	go Push(q, &count, 1)
-	go Push(q, &count, 0)
-
-	for atomic.LoadInt32(&count) != 5 {
-		time.Sleep(time.Millisecond)
-	}
-
-	temp, ok := q.PopFrontNoWait()
-	assert.Assert(t, ok == 0, ok)
-	assert.Assert(t, temp == 0, temp)
-
-	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0, ok)
-	assert.Assert(t, temp == 1, temp)
-
-	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0, ok)
-	assert.Assert(t, temp == 2, temp)
-
-	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0, ok)
-	assert.Assert(t, temp == 3, temp)
-
-	temp, ok = q.PopFrontNoWait()
-	assert.Assert(t, ok == 0, ok)
-	assert.Assert(t, temp == 4, temp)
-}
-
-func TestQueue5(t *testing.T) {
-	q := New[string](0)
-
-	go func() {
-		ok := q.PushBack("lalala")
-		assert.Assert(t, ok == 0, ok)
-	}()
-
-	i, ok := q.PopBack()
-	assert.Assert(t, ok == 0, ok)
-	assert.Assert(t, i == "lalala", i)
-}
-
-func TestQueue6(t *testing.T) {
-	q := New[string](0)
-
-	go func() {
-		ok := q.PushFront("lalala")
-		assert.Assert(t, ok == 0, ok)
-	}()
-
-	i, ok := q.PopFront()
-	assert.Assert(t, ok == 0, ok)
-	assert.Assert(t, i == "lalala", i)
 }
 
 func Benchmark_queue1(b *testing.B) {
