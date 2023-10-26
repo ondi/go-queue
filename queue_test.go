@@ -78,19 +78,19 @@ func TestWritersWaitReaders3(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 
-	_, ok := q.PopFrontNoWait()
+	_, ok := q.PopFrontNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopFrontNoWait()
+	_, ok = q.PopFrontNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopFrontNoWait()
+	_, ok = q.PopFrontNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopFrontNoWait()
+	_, ok = q.PopFrontNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopFrontNoWait()
+	_, ok = q.PopFrontNoLock()
 	assert.Assert(t, ok == 0, ok)
 }
 
@@ -107,19 +107,19 @@ func TestWritersWaitReaders4(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 
-	_, ok := q.PopBackNoWait()
+	_, ok := q.PopBackNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopBackNoWait()
+	_, ok = q.PopBackNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopBackNoWait()
+	_, ok = q.PopBackNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopBackNoWait()
+	_, ok = q.PopBackNoLock()
 	assert.Assert(t, ok == 0, ok)
 
-	_, ok = q.PopBackNoWait()
+	_, ok = q.PopBackNoLock()
 	assert.Assert(t, ok == 0, ok)
 }
 
@@ -204,19 +204,19 @@ func TestReadersWaitWriters3(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 
-	ok := q.PushFrontNoWait(1)
+	ok := q.PushFrontNoLock(1)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushFrontNoWait(2)
+	ok = q.PushFrontNoLock(2)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushFrontNoWait(3)
+	ok = q.PushFrontNoLock(3)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushFrontNoWait(4)
+	ok = q.PushFrontNoLock(4)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushFrontNoWait(5)
+	ok = q.PushFrontNoLock(5)
 	assert.Assert(t, ok == 0, ok)
 }
 
@@ -233,19 +233,19 @@ func TestReadersWaitWriters4(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 
-	ok := q.PushBackNoWait(1)
+	ok := q.PushBackNoLock(1)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushBackNoWait(2)
+	ok = q.PushBackNoLock(2)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushBackNoWait(3)
+	ok = q.PushBackNoLock(3)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushBackNoWait(4)
+	ok = q.PushBackNoLock(4)
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushBackNoWait(5)
+	ok = q.PushBackNoLock(5)
 	assert.Assert(t, ok == 0, ok)
 }
 
@@ -256,9 +256,9 @@ func TestQueue1(t *testing.T) {
 	assert.Assert(t, ok == 0, ok)
 	ok = q.PushFront("bububu")
 	assert.Assert(t, ok == 0, ok)
-	ok = q.PushBackNoWait("kukuku")
+	ok = q.PushBackNoLock("kukuku")
 	assert.Assert(t, ok == 1, ok)
-	ok = q.PushFrontNoWait("jujuju")
+	ok = q.PushFrontNoLock("jujuju")
 	assert.Assert(t, ok == 1, ok)
 
 	i, _ := q.PopBack()
@@ -294,9 +294,9 @@ func TestQueue3(t *testing.T) {
 	ok = q.PushFront("bububu")
 	assert.Assert(t, ok == 0, ok)
 
-	ok = q.PushBackNoWait("lalala")
+	ok = q.PushBackNoLock("lalala")
 	assert.Assert(t, ok == 1, ok)
-	ok = q.PushFrontNoWait("bububu")
+	ok = q.PushFrontNoLock("bububu")
 	assert.Assert(t, ok == 1, ok)
 
 	q.Close()

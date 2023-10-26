@@ -92,7 +92,7 @@ func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
 	return value, self.state
 }
 
-func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
+func (self *Open_t[Value_t]) PushFrontNoLock(value Value_t) int {
 	self.writers++
 	for self.state == 1 && self.buf.Size() != 0 && self.readers >= self.writers {
 		self.reader.Wait() // Broadcast required
@@ -105,7 +105,7 @@ func (self *Open_t[Value_t]) PushFrontNoWait(value Value_t) int {
 	return self.state
 }
 
-func (self *Open_t[Value_t]) PushBackNoWait(value Value_t) int {
+func (self *Open_t[Value_t]) PushBackNoLock(value Value_t) int {
 	self.writers++
 	for self.state == 1 && self.buf.Size() != 0 && self.readers >= self.writers {
 		self.reader.Wait() // Broadcast required
@@ -118,7 +118,7 @@ func (self *Open_t[Value_t]) PushBackNoWait(value Value_t) int {
 	return self.state
 }
 
-func (self *Open_t[Value_t]) PopFrontNoWait() (Value_t, int) {
+func (self *Open_t[Value_t]) PopFrontNoLock() (Value_t, int) {
 	self.readers++
 	self.reader.Broadcast()
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
@@ -133,7 +133,7 @@ func (self *Open_t[Value_t]) PopFrontNoWait() (Value_t, int) {
 	return value, self.state
 }
 
-func (self *Open_t[Value_t]) PopBackNoWait() (Value_t, int) {
+func (self *Open_t[Value_t]) PopBackNoLock() (Value_t, int) {
 	self.readers++
 	self.reader.Broadcast()
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {

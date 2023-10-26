@@ -24,10 +24,10 @@ type Queue[Value_t any] interface {
 	PopFront() (Value_t, int)
 	PopBack() (Value_t, int)
 
-	PushFrontNoWait(Value_t) int
-	PushBackNoWait(Value_t) int
-	PopFrontNoWait() (Value_t, int)
-	PopBackNoWait() (Value_t, int)
+	PushFrontNoLock(Value_t) int
+	PushBackNoLock(Value_t) int
+	PopFrontNoLock() (Value_t, int)
+	PopBackNoLock() (Value_t, int)
 
 	RangeFront(func(Value_t) bool)
 	RangeBack(func(Value_t) bool)
@@ -57,9 +57,9 @@ func (self *Queue_t[Value_t]) PushFront(value Value_t) (ok int) {
 	return
 }
 
-func (self *Queue_t[Value_t]) PushFrontNoWait(value Value_t) (ok int) {
+func (self *Queue_t[Value_t]) PushFrontNoLock(value Value_t) (ok int) {
 	self.mx.Lock()
-	ok = self.q.PushFrontNoWait(value)
+	ok = self.q.PushFrontNoLock(value)
 	self.mx.Unlock()
 	return
 }
@@ -71,9 +71,9 @@ func (self *Queue_t[Value_t]) PushBack(value Value_t) (ok int) {
 	return
 }
 
-func (self *Queue_t[Value_t]) PushBackNoWait(value Value_t) (ok int) {
+func (self *Queue_t[Value_t]) PushBackNoLock(value Value_t) (ok int) {
 	self.mx.Lock()
-	ok = self.q.PushBackNoWait(value)
+	ok = self.q.PushBackNoLock(value)
 	self.mx.Unlock()
 	return
 }
@@ -85,9 +85,9 @@ func (self *Queue_t[Value_t]) PopFront() (value Value_t, ok int) {
 	return
 }
 
-func (self *Queue_t[Value_t]) PopFrontNoWait() (value Value_t, ok int) {
+func (self *Queue_t[Value_t]) PopFrontNoLock() (value Value_t, ok int) {
 	self.mx.Lock()
-	value, ok = self.q.PopFrontNoWait()
+	value, ok = self.q.PopFrontNoLock()
 	self.mx.Unlock()
 	return
 }
@@ -99,9 +99,9 @@ func (self *Queue_t[Value_t]) PopBack() (value Value_t, ok int) {
 	return
 }
 
-func (self *Queue_t[Value_t]) PopBackNoWait() (value Value_t, ok int) {
+func (self *Queue_t[Value_t]) PopBackNoLock() (value Value_t, ok int) {
 	self.mx.Lock()
-	value, ok = self.q.PopBackNoWait()
+	value, ok = self.q.PopBackNoLock()
 	self.mx.Unlock()
 	return
 }
