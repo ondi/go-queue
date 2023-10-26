@@ -94,11 +94,11 @@ func (self *Open_t[Value_t]) PopBack() (Value_t, int) {
 
 func (self *Open_t[Value_t]) PushFrontNoLock(value Value_t) int {
 	self.writers++
-	for self.state == 1 && self.buf.Size() != 0 && self.readers >= self.writers {
+	for self.state == 1 && self.buf.Size() > self.limit && self.readers >= self.writers {
 		self.reader.Wait() // Broadcast required
 	}
 	self.writers--
-	if self.state == 1 && self.buf.PushFront(value) {
+	if self.state == 1 && self.buf.Size()-self.readers < self.limit && self.buf.PushFront(value) {
 		self.writer.Broadcast()
 		return 0
 	}
@@ -107,11 +107,11 @@ func (self *Open_t[Value_t]) PushFrontNoLock(value Value_t) int {
 
 func (self *Open_t[Value_t]) PushBackNoLock(value Value_t) int {
 	self.writers++
-	for self.state == 1 && self.buf.Size() != 0 && self.readers >= self.writers {
+	for self.state == 1 && self.buf.Size() > self.limit && self.readers >= self.writers {
 		self.reader.Wait() // Broadcast required
 	}
 	self.writers--
-	if self.state == 1 && self.buf.PushBack(value) {
+	if self.state == 1 && self.buf.Size()-self.readers < self.limit && self.buf.PushBack(value) {
 		self.writer.Broadcast()
 		return 0
 	}

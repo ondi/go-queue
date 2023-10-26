@@ -249,7 +249,53 @@ func TestReadersWaitWriters4(t *testing.T) {
 	assert.Assert(t, ok == 0, ok)
 }
 
-func TestQueue1(t *testing.T) {
+func TestNoLock1(t *testing.T) {
+	q := New[int](5)
+
+	ok := q.PushBackNoLock(1)
+	assert.Assert(t, ok == 0, ok)
+	ok = q.PushBackNoLock(2)
+	assert.Assert(t, ok == 0, ok)
+	ok = q.PushBackNoLock(3)
+	assert.Assert(t, ok == 0, ok)
+	ok = q.PushBackNoLock(4)
+	assert.Assert(t, ok == 0, ok)
+	ok = q.PushBackNoLock(5)
+	assert.Assert(t, ok == 0, ok)
+
+	temp, ok := q.PopFrontNoLock()
+	assert.Assert(t, ok == 0 && temp == 1, ok)
+	temp, ok = q.PopFrontNoLock()
+	assert.Assert(t, ok == 0 && temp == 2, ok)
+	temp, ok = q.PopFrontNoLock()
+	assert.Assert(t, ok == 0 && temp == 3, ok)
+	temp, ok = q.PopFrontNoLock()
+	assert.Assert(t, ok == 0 && temp == 4, ok)
+	temp, ok = q.PopFrontNoLock()
+	assert.Assert(t, ok == 0 && temp == 5, ok)
+}
+
+func TestNoLock2(t *testing.T) {
+	q := New[int](0)
+
+	ok := q.PushBackNoLock(1)
+	assert.Assert(t, ok == 1, ok)
+
+	temp, ok := q.PopFrontNoLock()
+	assert.Assert(t, ok == 1 && temp == 0, ok)
+}
+
+func TestNoLock3(t *testing.T) {
+	q := New[int](0)
+
+	ok := q.PushFrontNoLock(1)
+	assert.Assert(t, ok == 1, ok)
+
+	temp, ok := q.PopBackNoLock()
+	assert.Assert(t, ok == 1 && temp == 0, ok)
+}
+
+func TestSize1(t *testing.T) {
 	q := New[string](2)
 
 	ok := q.PushBack("lalala")
@@ -267,7 +313,7 @@ func TestQueue1(t *testing.T) {
 	assert.Assert(t, i == "bububu", i)
 }
 
-func TestQueue2(t *testing.T) {
+func TestClose1(t *testing.T) {
 	q := New[string](4)
 
 	ok := q.PushBack("lalala")
@@ -286,7 +332,7 @@ func TestQueue2(t *testing.T) {
 	assert.Assert(t, i == "bububu", i)
 }
 
-func TestQueue3(t *testing.T) {
+func TestClose2(t *testing.T) {
 	q := New[string](2)
 
 	ok := q.PushBack("lalala")
