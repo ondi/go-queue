@@ -8,7 +8,7 @@ import (
 )
 
 func TestWritersWaitReaders1(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go q.PushBack(4)
 	go q.PushBack(3)
@@ -37,7 +37,7 @@ func TestWritersWaitReaders1(t *testing.T) {
 }
 
 func TestWritersWaitReaders2(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go q.PushFront(4)
 	go q.PushFront(3)
@@ -66,7 +66,7 @@ func TestWritersWaitReaders2(t *testing.T) {
 }
 
 func TestWritersWaitReaders3(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go q.PushBack(4)
 	go q.PushBack(3)
@@ -95,7 +95,7 @@ func TestWritersWaitReaders3(t *testing.T) {
 }
 
 func TestWritersWaitReaders4(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go q.PushFront(4)
 	go q.PushFront(3)
@@ -134,7 +134,7 @@ func PopFront(q Queue[int32], t *testing.T) {
 }
 
 func TestReadersWaitWriters1(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go PopBack(q, t)
 	go PopBack(q, t)
@@ -163,7 +163,7 @@ func TestReadersWaitWriters1(t *testing.T) {
 }
 
 func TestReadersWaitWriters2(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go PopFront(q, t)
 	go PopFront(q, t)
@@ -192,7 +192,7 @@ func TestReadersWaitWriters2(t *testing.T) {
 }
 
 func TestReadersWaitWriters3(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go PopBack(q, t)
 	go PopBack(q, t)
@@ -221,7 +221,7 @@ func TestReadersWaitWriters3(t *testing.T) {
 }
 
 func TestReadersWaitWriters4(t *testing.T) {
-	q := New[int32](0)
+	q := NewSync[int32](0)
 
 	go PopFront(q, t)
 	go PopFront(q, t)
@@ -250,7 +250,7 @@ func TestReadersWaitWriters4(t *testing.T) {
 }
 
 func TestNoLock1(t *testing.T) {
-	q := New[int](5)
+	q := NewSync[int](5)
 
 	ok := q.PushBackNoLock(1)
 	assert.Assert(t, ok == 0, ok)
@@ -276,7 +276,7 @@ func TestNoLock1(t *testing.T) {
 }
 
 func TestNoLock2(t *testing.T) {
-	q := New[int](0)
+	q := NewSync[int](0)
 
 	ok := q.PushBackNoLock(1)
 	assert.Assert(t, ok == 1, ok)
@@ -286,7 +286,7 @@ func TestNoLock2(t *testing.T) {
 }
 
 func TestNoLock3(t *testing.T) {
-	q := New[int](0)
+	q := NewSync[int](0)
 
 	ok := q.PushFrontNoLock(1)
 	assert.Assert(t, ok == 1, ok)
@@ -296,7 +296,7 @@ func TestNoLock3(t *testing.T) {
 }
 
 func TestSize1(t *testing.T) {
-	q := New[string](2)
+	q := NewSync[string](2)
 
 	ok := q.PushBack("lalala")
 	assert.Assert(t, ok == 0, ok)
@@ -314,7 +314,7 @@ func TestSize1(t *testing.T) {
 }
 
 func TestClose1(t *testing.T) {
-	q := New[string](4)
+	q := NewSync[string](4)
 
 	ok := q.PushBack("lalala")
 	assert.Assert(t, ok == 0, ok)
@@ -333,7 +333,7 @@ func TestClose1(t *testing.T) {
 }
 
 func TestClose2(t *testing.T) {
-	q := New[string](2)
+	q := NewSync[string](2)
 
 	ok := q.PushBack("lalala")
 	assert.Assert(t, ok == 0, ok)
@@ -360,7 +360,7 @@ func TestClose2(t *testing.T) {
 func Benchmark_queue1(b *testing.B) {
 	b.ReportAllocs()
 
-	q := New[string](b.N)
+	q := NewSync[string](b.N)
 	for i := 0; i < b.N; i++ {
 		q.PushBack("lalala")
 	}
@@ -369,7 +369,7 @@ func Benchmark_queue1(b *testing.B) {
 func Benchmark_queue2(b *testing.B) {
 	b.ReportAllocs()
 
-	q := New[string](b.N)
+	q := NewSync[string](b.N)
 
 	b.RunParallel(func(pb *testing.PB) {
 		var ok int
@@ -393,7 +393,7 @@ func Benchmark_queue2(b *testing.B) {
 func Benchmark_queue3(b *testing.B) {
 	b.ReportAllocs()
 
-	q := New[string](b.N)
+	q := NewSync[string](b.N)
 
 	b.RunParallel(func(pb *testing.PB) {
 		var ok int
