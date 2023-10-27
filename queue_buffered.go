@@ -49,7 +49,6 @@ func (self *Beffered_t[Value_t]) PushBack(value Value_t) int {
 
 func (self *Beffered_t[Value_t]) PopFront() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
 	for self.state == 1 && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
@@ -64,7 +63,6 @@ func (self *Beffered_t[Value_t]) PopFront() (Value_t, int) {
 
 func (self *Beffered_t[Value_t]) PopBack() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
 	for self.state == 1 && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
@@ -105,7 +103,6 @@ func (self *Beffered_t[Value_t]) PushBackNoLock(value Value_t) int {
 
 func (self *Beffered_t[Value_t]) PopFrontNoLock() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
 		self.writer.Wait() // Broadcast required
 	}
@@ -120,7 +117,6 @@ func (self *Beffered_t[Value_t]) PopFrontNoLock() (Value_t, int) {
 
 func (self *Beffered_t[Value_t]) PopBackNoLock() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
 		self.writer.Wait() // Broadcast required
 	}
