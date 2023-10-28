@@ -20,6 +20,7 @@ type Empty_t[Value_t any] struct {
 	state   int
 }
 
+// reader should Signal() to wake up Wait()
 func (self *Empty_t[Value_t]) PushFront(value Value_t) int {
 	self.writers++
 	for self.state == 1 && (self.buf.Size() == 1 || self.readers == 0) {
@@ -33,6 +34,7 @@ func (self *Empty_t[Value_t]) PushFront(value Value_t) int {
 	return self.state
 }
 
+// reader should Signal() to wake up Wait()
 func (self *Empty_t[Value_t]) PushBack(value Value_t) int {
 	self.writers++
 	for self.state == 1 && (self.buf.Size() == 1 || self.readers == 0) {
@@ -48,7 +50,7 @@ func (self *Empty_t[Value_t]) PushBack(value Value_t) int {
 
 func (self *Empty_t[Value_t]) PopFront() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
+	self.reader.Broadcast() // Signal() writer abount reader
 	for self.state == 1 && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
@@ -63,7 +65,7 @@ func (self *Empty_t[Value_t]) PopFront() (Value_t, int) {
 
 func (self *Empty_t[Value_t]) PopBack() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
+	self.reader.Broadcast() // Signal() writer abount reader
 	for self.state == 1 && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
@@ -104,7 +106,7 @@ func (self *Empty_t[Value_t]) PushBackNoLock(value Value_t) int {
 
 func (self *Empty_t[Value_t]) PopFrontNoLock() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
+	self.reader.Broadcast() // Signal() writer abount reader
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
 		self.writer.Wait() // Broadcast required
 	}
@@ -119,7 +121,7 @@ func (self *Empty_t[Value_t]) PopFrontNoLock() (Value_t, int) {
 
 func (self *Empty_t[Value_t]) PopBackNoLock() (Value_t, int) {
 	self.readers++
-	self.reader.Broadcast()
+	self.reader.Broadcast() // Signal() writer abount reader
 	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
 		self.writer.Wait() // Broadcast required
 	}
