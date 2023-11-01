@@ -38,6 +38,7 @@ type Queue[Value_t any] interface {
 
 	Readers() int
 	Writers() int
+	Limit() int
 	Size() int
 
 	Close()
@@ -130,13 +131,6 @@ func (self *QueueSync_t[Value_t]) PopBackNoLock() (value Value_t, ok int) {
 	return
 }
 
-func (self *QueueSync_t[Value_t]) Size() (res int) {
-	self.mx.Lock()
-	res = self.q.Size()
-	self.mx.Unlock()
-	return
-}
-
 func (self *QueueSync_t[Value_t]) Readers() (res int) {
 	self.mx.Lock()
 	res = self.q.Readers()
@@ -147,6 +141,20 @@ func (self *QueueSync_t[Value_t]) Readers() (res int) {
 func (self *QueueSync_t[Value_t]) Writers() (res int) {
 	self.mx.Lock()
 	res = self.q.Writers()
+	self.mx.Unlock()
+	return
+}
+
+func (self *QueueSync_t[Value_t]) Limit() (res int) {
+	self.mx.Lock()
+	res = self.q.Limit()
+	self.mx.Unlock()
+	return
+}
+
+func (self *QueueSync_t[Value_t]) Size() (res int) {
+	self.mx.Lock()
+	res = self.q.Size()
 	self.mx.Unlock()
 	return
 }

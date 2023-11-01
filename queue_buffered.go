@@ -129,16 +129,20 @@ func (self *Beffered_t[Value_t]) PopBackNoLock() (Value_t, int) {
 	return value, self.state
 }
 
-func (self *Beffered_t[Value_t]) Size() int {
-	return self.buf.Size()
-}
-
 func (self *Beffered_t[Value_t]) Readers() int {
 	return self.readers
 }
 
 func (self *Beffered_t[Value_t]) Writers() int {
 	return self.writers
+}
+
+func (self *Beffered_t[Value_t]) Limit() int {
+	return self.limit
+}
+
+func (self *Beffered_t[Value_t]) Size() int {
+	return self.buf.Size()
 }
 
 func (self *Beffered_t[Value_t]) RangeFront(f func(Value_t) bool) {
