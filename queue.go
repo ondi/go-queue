@@ -82,23 +82,9 @@ func (self *QueueSync_t[Value_t]) PushFront(value Value_t) (ok int) {
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PushFrontNoLock(value Value_t) (ok int) {
-	self.mx.Lock()
-	ok = self.q.PushFrontNoLock(value)
-	self.mx.Unlock()
-	return
-}
-
 func (self *QueueSync_t[Value_t]) PushBack(value Value_t) (ok int) {
 	self.mx.Lock()
 	ok = self.q.PushBack(value)
-	self.mx.Unlock()
-	return
-}
-
-func (self *QueueSync_t[Value_t]) PushBackNoLock(value Value_t) (ok int) {
-	self.mx.Lock()
-	ok = self.q.PushBackNoLock(value)
 	self.mx.Unlock()
 	return
 }
@@ -110,16 +96,30 @@ func (self *QueueSync_t[Value_t]) PopFront() (value Value_t, ok int) {
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PopFrontNoLock() (value Value_t, ok int) {
+func (self *QueueSync_t[Value_t]) PopBack() (value Value_t, ok int) {
 	self.mx.Lock()
-	value, ok = self.q.PopFrontNoLock()
+	value, ok = self.q.PopBack()
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PopBack() (value Value_t, ok int) {
+func (self *QueueSync_t[Value_t]) PushFrontNoLock(value Value_t) (ok int) {
 	self.mx.Lock()
-	value, ok = self.q.PopBack()
+	ok = self.q.PushFrontNoLock(value)
+	self.mx.Unlock()
+	return
+}
+
+func (self *QueueSync_t[Value_t]) PushBackNoLock(value Value_t) (ok int) {
+	self.mx.Lock()
+	ok = self.q.PushBackNoLock(value)
+	self.mx.Unlock()
+	return
+}
+
+func (self *QueueSync_t[Value_t]) PopFrontNoLock() (value Value_t, ok int) {
+	self.mx.Lock()
+	value, ok = self.q.PopFrontNoLock()
 	self.mx.Unlock()
 	return
 }
@@ -129,6 +129,18 @@ func (self *QueueSync_t[Value_t]) PopBackNoLock() (value Value_t, ok int) {
 	value, ok = self.q.PopBackNoLock()
 	self.mx.Unlock()
 	return
+}
+
+func (self *QueueSync_t[Value_t]) RangeFront(f func(Value_t) bool) {
+	self.mx.Lock()
+	self.q.RangeFront(f)
+	self.mx.Unlock()
+}
+
+func (self *QueueSync_t[Value_t]) RangeBack(f func(Value_t) bool) {
+	self.mx.Lock()
+	self.q.RangeBack(f)
+	self.mx.Unlock()
 }
 
 func (self *QueueSync_t[Value_t]) Readers() (res int) {
@@ -157,18 +169,6 @@ func (self *QueueSync_t[Value_t]) Size() (res int) {
 	res = self.q.Size()
 	self.mx.Unlock()
 	return
-}
-
-func (self *QueueSync_t[Value_t]) RangeFront(f func(Value_t) bool) {
-	self.mx.Lock()
-	self.q.RangeFront(f)
-	self.mx.Unlock()
-}
-
-func (self *QueueSync_t[Value_t]) RangeBack(f func(Value_t) bool) {
-	self.mx.Lock()
-	self.q.RangeBack(f)
-	self.mx.Unlock()
 }
 
 func (self *QueueSync_t[Value_t]) Close() {
