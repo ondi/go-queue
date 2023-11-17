@@ -23,15 +23,15 @@ type List[Value_t any] interface {
 }
 
 type Queue[Value_t any] interface {
-	PushFront(Value_t) int
-	PushBack(Value_t) int
-	PopFront() (Value_t, int)
-	PopBack() (Value_t, int)
+	PushFront(Value_t) bool
+	PushBack(Value_t) bool
+	PopFront() (Value_t, bool)
+	PopBack() (Value_t, bool)
 
-	PushFrontNoLock(Value_t) int
-	PushBackNoLock(Value_t) int
-	PopFrontNoLock() (Value_t, int)
-	PopBackNoLock() (Value_t, int)
+	PushFrontNoLock(Value_t) bool
+	PushBackNoLock(Value_t) bool
+	PopFrontNoLock() (Value_t, bool)
+	PopBackNoLock() (Value_t, bool)
 
 	RangeFront(func(Value_t) bool)
 	RangeBack(func(Value_t) bool)
@@ -42,6 +42,7 @@ type Queue[Value_t any] interface {
 	Size() int
 
 	Close()
+	Closed() bool
 }
 
 func NewOpen[Value_t any](mx sync.Locker, limit int) Queue[Value_t] {
@@ -51,7 +52,7 @@ func NewOpen[Value_t any](mx sync.Locker, limit int) Queue[Value_t] {
 			reader: sync.NewCond(mx),
 			writer: sync.NewCond(mx),
 			limit:  limit,
-			state:  1,
+			open:   true,
 		}
 	} else {
 		return &Beffered_t[Value_t]{
@@ -59,7 +60,7 @@ func NewOpen[Value_t any](mx sync.Locker, limit int) Queue[Value_t] {
 			reader: sync.NewCond(mx),
 			writer: sync.NewCond(mx),
 			limit:  limit,
-			state:  1,
+			open:   true,
 		}
 	}
 }
@@ -75,56 +76,56 @@ func NewSync[Value_t any](limit int) Queue[Value_t] {
 	return self
 }
 
-func (self *QueueSync_t[Value_t]) PushFront(value Value_t) (ok int) {
+func (self *QueueSync_t[Value_t]) PushFront(value Value_t) (ok bool) {
 	self.mx.Lock()
 	ok = self.q.PushFront(value)
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PushBack(value Value_t) (ok int) {
+func (self *QueueSync_t[Value_t]) PushBack(value Value_t) (ok bool) {
 	self.mx.Lock()
 	ok = self.q.PushBack(value)
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PopFront() (value Value_t, ok int) {
+func (self *QueueSync_t[Value_t]) PopFront() (value Value_t, ok bool) {
 	self.mx.Lock()
 	value, ok = self.q.PopFront()
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PopBack() (value Value_t, ok int) {
+func (self *QueueSync_t[Value_t]) PopBack() (value Value_t, ok bool) {
 	self.mx.Lock()
 	value, ok = self.q.PopBack()
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PushFrontNoLock(value Value_t) (ok int) {
+func (self *QueueSync_t[Value_t]) PushFrontNoLock(value Value_t) (ok bool) {
 	self.mx.Lock()
 	ok = self.q.PushFrontNoLock(value)
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PushBackNoLock(value Value_t) (ok int) {
+func (self *QueueSync_t[Value_t]) PushBackNoLock(value Value_t) (ok bool) {
 	self.mx.Lock()
 	ok = self.q.PushBackNoLock(value)
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PopFrontNoLock() (value Value_t, ok int) {
+func (self *QueueSync_t[Value_t]) PopFrontNoLock() (value Value_t, ok bool) {
 	self.mx.Lock()
 	value, ok = self.q.PopFrontNoLock()
 	self.mx.Unlock()
 	return
 }
 
-func (self *QueueSync_t[Value_t]) PopBackNoLock() (value Value_t, ok int) {
+func (self *QueueSync_t[Value_t]) PopBackNoLock() (value Value_t, ok bool) {
 	self.mx.Lock()
 	value, ok = self.q.PopBackNoLock()
 	self.mx.Unlock()
@@ -175,4 +176,11 @@ func (self *QueueSync_t[Value_t]) Close() {
 	self.mx.Lock()
 	self.q.Close()
 	self.mx.Unlock()
+}
+
+func (self *QueueSync_t[Value_t]) Closed() (res bool) {
+	self.mx.Lock()
+	res = self.q.Closed()
+	self.mx.Unlock()
+	return
 }

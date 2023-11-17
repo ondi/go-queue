@@ -17,121 +17,113 @@ type Empty_t[Value_t any] struct {
 	readers int
 	writers int
 	limit   int
-	state   int
+	open    bool
 }
 
 // reader should Signal() to wake up Wait()
-func (self *Empty_t[Value_t]) PushFront(value Value_t) int {
+func (self *Empty_t[Value_t]) PushFront(value Value_t) bool {
 	self.writers++
-	for self.state == 1 && (self.buf.Size() == 1 || self.readers == 0) {
+	for self.open && (self.buf.Size() == 1 || self.readers == 0) {
 		self.reader.Wait()
 	}
 	self.writers--
-	if self.state == 1 && self.buf.PushFront(value) {
+	if self.open && self.buf.PushFront(value) {
 		self.writer.Broadcast()
-		return 0
+		return true
 	}
-	return self.state
+	return false
 }
 
 // reader should Signal() to wake up Wait()
-func (self *Empty_t[Value_t]) PushBack(value Value_t) int {
+func (self *Empty_t[Value_t]) PushBack(value Value_t) bool {
 	self.writers++
-	for self.state == 1 && (self.buf.Size() == 1 || self.readers == 0) {
+	for self.open && (self.buf.Size() == 1 || self.readers == 0) {
 		self.reader.Wait()
 	}
 	self.writers--
-	if self.state == 1 && self.buf.PushBack(value) {
+	if self.open && self.buf.PushBack(value) {
 		self.writer.Broadcast()
-		return 0
+		return true
 	}
-	return self.state
+	return false
 }
 
-func (self *Empty_t[Value_t]) PopFront() (Value_t, int) {
+func (self *Empty_t[Value_t]) PopFront() (value Value_t, ok bool) {
 	self.readers++
 	self.reader.Broadcast() // Signal() writer abount reader
-	for self.state == 1 && self.buf.Size() == 0 {
+	for self.open && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
 	self.readers--
-	value, ok := self.buf.PopFront()
-	if ok {
+	if value, ok = self.buf.PopFront(); ok {
 		self.reader.Broadcast()
-		return value, 0
 	}
-	return value, self.state
+	return
 }
 
-func (self *Empty_t[Value_t]) PopBack() (Value_t, int) {
+func (self *Empty_t[Value_t]) PopBack() (value Value_t, ok bool) {
 	self.readers++
 	self.reader.Broadcast() // Signal() writer abount reader
-	for self.state == 1 && self.buf.Size() == 0 {
+	for self.open && self.buf.Size() == 0 {
 		self.writer.Wait()
 	}
 	self.readers--
-	value, ok := self.buf.PopBack()
-	if ok {
+	if value, ok = self.buf.PopBack(); ok {
 		self.reader.Broadcast()
-		return value, 0
 	}
-	return value, self.state
+	return
 }
 
-func (self *Empty_t[Value_t]) PushFrontNoLock(value Value_t) int {
+func (self *Empty_t[Value_t]) PushFrontNoLock(value Value_t) bool {
 	self.writers++
-	for self.state == 1 && self.buf.Size() == 1 && self.readers >= self.writers {
+	for self.open && self.buf.Size() == 1 && self.readers >= self.writers {
 		self.reader.Wait() // Broadcast required
 	}
 	self.writers--
-	if self.state == 1 && self.readers > 0 && self.buf.PushFront(value) {
+	if self.open && self.readers > 0 && self.buf.PushFront(value) {
 		self.writer.Broadcast()
-		return 0
+		return true
 	}
-	return self.state
+	return false
 }
 
-func (self *Empty_t[Value_t]) PushBackNoLock(value Value_t) int {
+func (self *Empty_t[Value_t]) PushBackNoLock(value Value_t) bool {
 	self.writers++
-	for self.state == 1 && self.buf.Size() == 1 && self.readers >= self.writers {
+	for self.open && self.buf.Size() == 1 && self.readers >= self.writers {
 		self.reader.Wait() // Broadcast required
 	}
 	self.writers--
-	if self.state == 1 && self.readers > 0 && self.buf.PushBack(value) {
+	if self.open && self.readers > 0 && self.buf.PushBack(value) {
 		self.writer.Broadcast()
-		return 0
+		return true
 	}
-	return self.state
+	return false
 }
 
-func (self *Empty_t[Value_t]) PopFrontNoLock() (Value_t, int) {
+func (self *Empty_t[Value_t]) PopFrontNoLock() (value Value_t, ok bool) {
 	self.readers++
 	self.reader.Broadcast() // Signal() writer abount reader
-	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
+	for self.open && self.buf.Size() == 0 && self.writers >= self.readers {
 		self.writer.Wait() // Broadcast required
 	}
 	self.readers--
-	value, ok := self.buf.PopFront()
-	if ok {
+	if value, ok = self.buf.PopFront(); ok {
 		self.reader.Broadcast()
-		return value, 0
 	}
-	return value, self.state
+	return
 }
 
-func (self *Empty_t[Value_t]) PopBackNoLock() (Value_t, int) {
+func (self *Empty_t[Value_t]) PopBackNoLock() (value Value_t, ok bool) {
 	self.readers++
 	self.reader.Broadcast() // Signal() writer abount reader
-	for self.state == 1 && self.buf.Size() == 0 && self.writers >= self.readers {
+	for self.open && self.buf.Size() == 0 && self.writers >= self.readers {
 		self.writer.Wait() // Broadcast required
 	}
 	self.readers--
-	value, ok := self.buf.PopBack()
-	if ok {
+	if value, ok = self.buf.PopBack(); ok {
 		self.reader.Broadcast()
-		return value, 0
 	}
-	return value, self.state
+	return
 }
 
 func (self *Empty_t[Value_t]) RangeFront(f func(Value_t) bool) {
@@ -159,7 +151,11 @@ func (self *Empty_t[Value_t]) Size() int {
 }
 
 func (self *Empty_t[Value_t]) Close() {
-	self.state = -1
+	self.open = false
 	self.writer.Broadcast()
 	self.reader.Broadcast()
+}
+
+func (self *Empty_t[Value_t]) Closed() bool {
+	return self.open == false
 }
