@@ -1,7 +1,7 @@
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/ondi/go-circular v0.0.0-20240806163217-2b2a2afb1db4 h1:7DhzuT8HF3+ci463Hc6E+m8wCLe+lT9poRYnbPCd/dU=
-github.com/ondi/go-circular v0.0.0-20240806163217-2b2a2afb1db4/go.mod h1:fOnGuMofxAkkckbqcFxParIJGGnqMoPrZTzD+fSPcfg=
+github.com/ondi/go-circular v0.0.0-20250228092841-58964bf0fa4f h1:ghF4vDRdp0kEj65vkMVyi2h56ztKnS5e+6cwqcPxs+A=
+github.com/ondi/go-circular v0.0.0-20250228092841-58964bf0fa4f/go.mod h1:f7g84oUUNUAL6teyMPWlIFo2vqbaz7SjXpQMSP7mJKs=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 gotest.tools v2.2.0+incompatible h1:VsBPFP1AI068pPrMxtb/S8Zkgf9xEmTLJjfM+P5UIEo=
